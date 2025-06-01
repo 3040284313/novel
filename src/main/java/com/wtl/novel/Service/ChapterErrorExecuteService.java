@@ -28,10 +28,7 @@ public class ChapterErrorExecuteService {
         return chapterErrorExecuteRepository.findAllByNovelIdAndIsDeletedFalse(novelId);
     }
 
-    
-    public ChapterErrorExecute getChapterErrorExecuteByNovelIdAndChapterNumber(Long novelId, Integer chapterNumber) {
-        return chapterErrorExecuteRepository.findByNovelIdAndChapterNumberAndIsDeletedFalse(novelId, chapterNumber);
-    }
+
 
     
     public ChapterErrorExecute saveChapterErrorExecute(ChapterErrorExecute ChapterErrorExecute) {

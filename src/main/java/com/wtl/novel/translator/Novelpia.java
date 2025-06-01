@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -496,8 +497,23 @@ public class Novelpia {
         }
     }
 
+    public static String removeScriptsKeepText(String html) {
+        Document doc = Jsoup.parse(html);
+        doc.select("script").remove(); // 移除所有script标签
+
+        // 关键配置：禁用实体转义
+        doc.outputSettings()
+                .escapeMode(Entities.EscapeMode.xhtml) // 使用最少转义
+                .prettyPrint(false);                   // 禁用格式化
+
+        // 直接获取body内的纯文本内容
+        return doc.body().text();
+    }
+
+
     private String extractContent(String jsonResponse, Pattern pattern, String episodeId) throws Exception {
         String contentAll = "";
+        jsonResponse = removeScriptsKeepText(jsonResponse);
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -535,6 +551,7 @@ public class Novelpia {
                 currentIndex += 1;
             }
         } catch (Exception e) {
+            e.printStackTrace();
             contentAll += "获取章节失败";
         }
 
@@ -604,6 +621,12 @@ public class Novelpia {
         final boolean novelPiaFont = Boolean.parseBoolean(dictionaryRepository.findDictionaryByKeyFieldAndIsDeletedFalse("novelPiaFont").getValueField());
 
         List<Novel> novels = getNovels();
+//        List<Novel> novels = new ArrayList<>();
+//        Novel novel1 = new Novel();
+//        novel1.setTrueId("97958");
+//        novel1.setId(349996L);
+//        novel1.setTitle("测试");
+//        novels.add(novel1);
         List<ChapterExecute> chapterExecuteList = Collections.synchronizedList(new ArrayList<>());
 
         // 创建线程池（根据实际情况调整核心线程数）
@@ -624,10 +647,12 @@ public class Novelpia {
                                 return;
                             }
 
-                            Set<Integer> terminologyList = terminologyService.findDistinctChapterNumbersByNovelIdAndSourceTargetDownloaded(novel.getId());
+//                            Set<Integer> terminologyList = terminologyService.findDistinctChapterNumbersByNovelIdAndSourceTargetDownloaded(novel.getId());
 
+                            List<String> titlesByNovelIdAndIsDeletedFalse = chapterRepository.findTitlesByNovelIdAndIsDeletedFalse(novel.getId());
                             List<String> executingChapters = chapterExecuteRepository
                                     .findTitlesByNovelIdAndIsDeletedFalse(novel.getId());
+                            executingChapters.addAll(titlesByNovelIdAndIsDeletedFalse);
                             Set<String> existingChaptersSet = new HashSet<>(executingChapters);
                             // 获取章节映射关系
                             Map<String, Boolean> episodeMap = buildFormDataFromMap(
@@ -641,7 +666,7 @@ public class Novelpia {
                                 String episodeFile = String.format(epFormat, String.format("%04d", episodeCounter));
 
                                 // 检查章节是否需要处理
-                                if (!terminologyList.contains(episodeCounter) && !existingChaptersSet.contains(episodeFile)) {
+                                if (!existingChaptersSet.contains(episodeFile)) {
 
                                     try {
                                         // 获取章节内容
@@ -2008,7 +2033,7 @@ public class Novelpia {
                     .map(chapter -> CompletableFuture.runAsync(() -> {
                         try {
                             String episodeId = chapter.getTrueId();
-                            ChapterErrorExecute byNovelIdAndChapterNumberAndIsDeletedFalse = chapterErrorExecuteRepository.findByNovelIdAndChapterNumberAndIsDeletedFalse(chapter.getNovelId(), chapter.getChapterNumber());
+                            ChapterErrorExecute byNovelIdAndChapterNumberAndIsDeletedFalse = chapterErrorExecuteRepository.findByNovelIdAndChapterNumber(chapter.getNovelId(), chapter.getChapterNumber());
                             if (byNovelIdAndChapterNumberAndIsDeletedFalse != null && !byNovelIdAndChapterNumberAndIsDeletedFalse.isDeleted()) {
                                 chapterExecuteList.add(byNovelIdAndChapterNumberAndIsDeletedFalse);
                                 return;
@@ -2032,6 +2057,7 @@ public class Novelpia {
                                 if (byNovelIdAndChapterNumberAndIsDeletedFalse != null && byNovelIdAndChapterNumberAndIsDeletedFalse.isDeleted()) {
                                     byNovelIdAndChapterNumberAndIsDeletedFalse.setDeleted(false);
                                     byNovelIdAndChapterNumberAndIsDeletedFalse.setContent(content);
+                                    byNovelIdAndChapterNumberAndIsDeletedFalse.setTranslatorContent("");
                                     byNovelIdAndChapterNumberAndIsDeletedFalse.setNowState(0);
                                     ChapterErrorExecute save = chapterErrorExecuteRepository.save(byNovelIdAndChapterNumberAndIsDeletedFalse);
                                     chapterExecuteList.add(save);

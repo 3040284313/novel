@@ -1387,7 +1387,7 @@ public class Syosetu {
             List<CompletableFuture<Void>> futures = chapterList.stream()
                     .map(chapter -> CompletableFuture.runAsync(() -> {
                         try {
-                            ChapterErrorExecute byNovelIdAndChapterNumberAndIsDeletedFalse = chapterErrorExecuteRepository.findByNovelIdAndChapterNumberAndIsDeletedFalse(chapter.getNovelId(), chapter.getChapterNumber());
+                            ChapterErrorExecute byNovelIdAndChapterNumberAndIsDeletedFalse = chapterErrorExecuteRepository.findByNovelIdAndChapterNumber(chapter.getNovelId(), chapter.getChapterNumber());
                             if (byNovelIdAndChapterNumberAndIsDeletedFalse != null && !byNovelIdAndChapterNumberAndIsDeletedFalse.isDeleted()) {
                                 chapterExecuteList.add(byNovelIdAndChapterNumberAndIsDeletedFalse);
                                 return;
@@ -1400,6 +1400,7 @@ public class Syosetu {
                                         byNovelIdAndChapterNumberAndIsDeletedFalse.setDeleted(false);
                                         byNovelIdAndChapterNumberAndIsDeletedFalse.setContent(syosetuNovelDetail.getPrologue());
                                         byNovelIdAndChapterNumberAndIsDeletedFalse.setNowState(0);
+                                        byNovelIdAndChapterNumberAndIsDeletedFalse.setTranslatorContent("");
                                         ChapterErrorExecute save = chapterErrorExecuteRepository.save(byNovelIdAndChapterNumberAndIsDeletedFalse);
                                         chapterExecuteList.add(save);
                                         return;

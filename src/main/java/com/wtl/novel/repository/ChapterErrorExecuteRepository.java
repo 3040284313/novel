@@ -18,7 +18,7 @@ public interface ChapterErrorExecuteRepository extends JpaRepository<ChapterErro
     List<String> findTitlesByNovelIdAndIsDeletedFalse(@Param("novelId") Long novelId);
 
     // 根据 novel_id 和 chapter_number 查找 ChapterErrorExecute 实体
-    ChapterErrorExecute findByNovelIdAndChapterNumberAndIsDeletedFalse(Long novelId, Integer chapterNumber);
+    ChapterErrorExecute findByNovelIdAndChapterNumber(Long novelId, Integer chapterNumber);
 
     // 自定义查询返回 id
     @Query("SELECT c.id FROM ChapterErrorExecute c WHERE c.novelId = :novelId AND c.chapterNumber = :chapterNumber AND c.isDeleted = false")

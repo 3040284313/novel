@@ -27,9 +27,9 @@ import java.util.regex.Pattern;
 public class CloudflareR2Util {
 
     // Cloudflare R2 配置
-    private static final String ACCOUNT_ID = "1695ffc38d5*****055757d56";
-    private static final String ACCESS_KEY = "c87abd30bdc*****27f421abb0c3";
-    private static final String SECRET_KEY = "85c2141304d1d1*****d931d238d6b9323b027b2eb";
+    private static final String ACCOUNT_ID = "1695f***55757d56";
+    private static final String ACCESS_KEY = "c87abd30***bb0c3";
+    private static final String SECRET_KEY = "85c2141304d1d1b9f***8d6b9323b027b2eb";
     private static final String BUCKET_NAME = "photo";
     private static final String ENDPOINT = String.format("https://%s.r2.cloudflarestorage.com", ACCOUNT_ID);
     private static final Region REGION = Region.of("auto");

@@ -73,6 +73,22 @@ public class JsonEscapeUtils {
         return tableMap;
     }
 
+    public static String getTranslation1(String json) {
+        // 正则匹配 "translation": "..." 到最后一个 } 之间的内容
+        Pattern pattern = Pattern.compile(
+                "\"translation\"\\s*:\\s*\"([^\"]*)\"\\s*\\}"  // 匹配 "translation": "..." }
+        );
+        Matcher matcher = pattern.matcher(json);
+
+        if (matcher.find()) {
+            // 提取内容并处理转义字符
+            return matcher.group(1)
+                    .replace("\\n", "\n")
+                    .replace("\\\"", "\"");
+        }
+        return ""; // 未匹配到内容时返回空字符串
+    }
+
     public static String getTranslation(String json) {
         // 正则表达式：匹配从"translation":到最后一个}之间的内容
         String regex =
@@ -91,6 +107,11 @@ public class JsonEscapeUtils {
                     .replace("\\\"", "\"");
             sb.append(content);
         }
-        return sb.toString();
+        String string = sb.toString();
+        if (string.isEmpty()) {
+            string = JsonEscapeUtils.getTranslation1(json);
+        }
+        return string;
     }
+
 }
