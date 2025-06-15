@@ -513,7 +513,7 @@ public class Novelpia {
 
     private String extractContent(String jsonResponse, Pattern pattern, String episodeId) throws Exception {
         String contentAll = "";
-        jsonResponse = removeScriptsKeepText(jsonResponse);
+//        jsonResponse = removeScriptsKeepText(jsonResponse);
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -950,11 +950,13 @@ public class Novelpia {
     }
 
     private synchronized void saveFinalChapter(ChapterExecute chapterExecute) {
+        String obfuscator = dictionaryRepository.findDictionaryByKeyFieldAndIsDeletedFalse("TextObfuscator").getValueField();
         Chapter isExist = chapterRepository.findByNovelIdAndChapterNumberAndIsDeletedFalse(chapterExecute.getNovelId(), chapterExecute.getChapterNumber());
         if (isExist != null) {
             int length = isExist.getContent().length();
             isExist.setChapterNumber(chapterExecute.getChapterNumber());
-            isExist.setContent(chapterExecute.getTranslatorContent());
+            String result = TextObfuscator.insertObfuscatedText(chapterExecute.getTranslatorContent(), obfuscator);
+            isExist.setContent(result);
             isExist.setTitle(chapterExecute.getTitle());
             isExist.setNovelId(chapterExecute.getNovelId());
             isExist.setTrueId(chapterExecute.getTrueId());
@@ -964,7 +966,8 @@ public class Novelpia {
         } else {
             Chapter chapter = new Chapter();
             chapter.setChapterNumber(chapterExecute.getChapterNumber());
-            chapter.setContent(chapterExecute.getTranslatorContent());
+            String result = TextObfuscator.insertObfuscatedText(chapterExecute.getTranslatorContent(), obfuscator);
+            chapter.setContent(result);
             chapter.setTitle(chapterExecute.getTitle());
             chapter.setNovelId(chapterExecute.getNovelId());
             chapter.setTrueId(chapterExecute.getTrueId());
@@ -1199,11 +1202,13 @@ public class Novelpia {
                     if (hasError) {
                         resultList.add(chapterExecute);
                     } else {
+                        String obfuscator = dictionaryRepository.findDictionaryByKeyFieldAndIsDeletedFalse("TextObfuscator").getValueField();
                         Chapter chapter = chapterRepository.findByNovelIdAndChapterNumberAndIsDeletedFalse(chapterExecute.getNovelId(), chapterExecute.getChapterNumber());
                         if (chapter != null) {
                             int length = chapter.getContent().length();
                             chapter.setChapterNumber(chapterExecute.getChapterNumber());
-                            chapter.setContent(chapterExecute.getTranslatorContent());
+                            String result = TextObfuscator.insertObfuscatedText(chapterExecute.getTranslatorContent(), obfuscator);
+                            chapter.setContent(result);
                             chapter.setTitle(chapterExecute.getTitle());
                             chapter.setNovelId(chapterExecute.getNovelId());
                             chapter.setTrueId(chapterExecute.getTrueId());
@@ -1216,7 +1221,8 @@ public class Novelpia {
                         } else {
                             Chapter chapter1 = new Chapter();
                             chapter1.setChapterNumber(chapterExecute.getChapterNumber());
-                            chapter1.setContent(chapterExecute.getTranslatorContent());
+                            String result = TextObfuscator.insertObfuscatedText(chapterExecute.getTranslatorContent(), obfuscator);
+                            chapter1.setContent(result);
                             chapter1.setTitle(chapterExecute.getTitle());
                             chapter1.setNovelId(chapterExecute.getNovelId());
                             chapter1.setTrueId(chapterExecute.getTrueId());
@@ -1291,7 +1297,8 @@ public class Novelpia {
     public List<ChapterExecute> executeTranslation(String platformName, List<ChapterExecute> chapterExecuteList,int poolSize) {
         System.out.println("=======开始执行翻译=======");
         System.out.println("=======开始执行翻译=======");
-        System.out.println(chapterExecuteList.size());
+        System.out.println("chapterExecuteList.size()：" + chapterExecuteList.size());
+        System.out.println("poolSize：" + poolSize);
         System.out.println("=======开始执行翻译=======");
         System.out.println("=======开始执行翻译=======");
         // 初始化配置信息（保持单线程获取）
@@ -1324,6 +1331,7 @@ public class Novelpia {
 
             // 并行处理每个章节
             List<CompletableFuture<Void>> futures = new ArrayList<>();
+            System.out.println("groupedByNovelId：" + groupedByNovelId.size());
             for (Map.Entry<Long, List<ChapterExecute>> entry : groupedByNovelId.entrySet()) {
                 List<ChapterExecute> chapters = entry.getValue();
                 futures.add(CompletableFuture.runAsync(() ->
@@ -1397,6 +1405,7 @@ public class Novelpia {
                                 String apiUrl, String model, String maxLengthStr,
                                 List<ChapterExecute> resultList, String aiPrompt, OkHttpClient httpClient) {
         // 每个线程使用独立的随机数生成器
+        System.out.println("开始执行本小说汉化");
         ThreadLocalRandom random = ThreadLocalRandom.current();
         int maxLength = Integer.parseInt(maxLengthStr);
         if (chapterExecutes.isEmpty()) {
@@ -1499,11 +1508,13 @@ public class Novelpia {
                         if (hasError) {
                             resultList.add(chapterExecute);
                         } else {
+                            String obfuscator = dictionaryRepository.findDictionaryByKeyFieldAndIsDeletedFalse("TextObfuscator").getValueField();
                             Chapter isExist = chapterRepository.findByNovelIdAndChapterNumberAndIsDeletedFalse(chapterExecute.getNovelId(), chapterExecute.getChapterNumber());
                             if (isExist != null) {
                                 int length = isExist.getContent().length();
                                 isExist.setChapterNumber(chapterExecute.getChapterNumber());
-                                isExist.setContent(chapterExecute.getTranslatorContent());
+                                String result = TextObfuscator.insertObfuscatedText(chapterExecute.getTranslatorContent(), obfuscator);
+                                isExist.setContent(result);
                                 isExist.setTitle(chapterExecute.getTitle());
                                 isExist.setNovelId(chapterExecute.getNovelId());
                                 isExist.setTrueId(chapterExecute.getTrueId());
@@ -1513,13 +1524,15 @@ public class Novelpia {
                             } else {
                                 Chapter chapter = new Chapter();
                                 chapter.setChapterNumber(chapterExecute.getChapterNumber());
-                                chapter.setContent(chapterExecute.getTranslatorContent());
+                                String result = TextObfuscator.insertObfuscatedText(chapterExecute.getTranslatorContent(), obfuscator);
+                                chapter.setContent(result);
                                 chapter.setTitle(chapterExecute.getTitle());
                                 chapter.setNovelId(chapterExecute.getNovelId());
                                 chapter.setTrueId(chapterExecute.getTrueId());
                                 chapter.setOwnPhoto(chapterExecute.isOwnPhoto());
                                 chapterRepository.save(chapter);
                                 novelRepository.incrementFontNumberById(chapter.getNovelId(), (long) chapter.getContent().length());
+                                System.out.println("汉化完成：" + chapter.getId());
                             }
                         }
 
@@ -2179,9 +2192,11 @@ public class Novelpia {
 
     private synchronized void saveFinalChapterError(ChapterErrorExecute executed) {
         Chapter chapter = chapterRepository.findByNovelIdAndChapterNumberAndIsDeletedFalse(executed.getNovelId(), executed.getChapterNumber());
+        String obfuscator = dictionaryRepository.findDictionaryByKeyFieldAndIsDeletedFalse("TextObfuscator").getValueField();
         if (chapter != null) {
             int length = chapter.getContent().length();
-            chapter.setContent(executed.getTranslatorContent());
+            String result = TextObfuscator.insertObfuscatedText(executed.getTranslatorContent(), obfuscator);
+            chapter.setContent(result);
             chapterRepository.save(chapter);
             novelRepository.incrementFontNumberById(chapter.getNovelId(), (long) (chapter.getContent().length() - length));
             userFeedbackRepository.softDeleteByUserAndContent(executed.getNovelId(), chapter.getId());
@@ -2190,7 +2205,8 @@ public class Novelpia {
             // 只要程序没问题，不可能进入这个逻辑
             Chapter chapter1 = new Chapter();
             chapter1.setChapterNumber(executed.getChapterNumber());
-            chapter1.setContent(executed.getTranslatorContent());
+            String result = TextObfuscator.insertObfuscatedText(executed.getTranslatorContent(), obfuscator);
+            chapter1.setContent(result);
             chapter1.setTitle(executed.getTitle());
             chapter1.setNovelId(executed.getNovelId());
             chapter1.setOwnPhoto(executed.isOwnPhoto());
